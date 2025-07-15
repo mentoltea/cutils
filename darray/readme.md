@@ -58,8 +58,8 @@ Example:
 arr1 = [1, 2, 3]  
 arr2 = [4, 5, 6]  
 -- Concatination -->  
-arr1 = [1, 2, 3, 4, 5, 6]
-arr2 = [4, 5, 6]
+arr1 = [1, 2, 3, 4, 5, 6]  
+arr2 = [4, 5, 6]  
 
 - `da_pop(da, index)`  
 Pops (removes) element from the given index.
