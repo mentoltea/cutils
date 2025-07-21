@@ -69,10 +69,19 @@ Default darray struct:
 
 #define da_appends(da, T, ...) \
 { \
+    assert( sizeof( *((da).items) ) == sizeof( T ) && "Assertion of da_appends" ); \
     T _append_buf_[] = { __VA_ARGS__ }; \
-    for (T* _it_ = _append_buf_; _it_ < _append_buf_ +  sizeof(_append_buf_)/sizeof(T); _it_++) { \
-        da_append(da, *_it_); \
+    size_t _arr_count = sizeof( (_append_buf_) )/(sizeof( *(_append_buf_) )); \
+    if ((da).capacity < (da).count + _arr_count) { \
+        size_t newcap = (da).count + _arr_count; \
+        void* newitems = CUTILS_DARRAY_ALLOCATOR( newcap * sizeof( *((da).items) ) ); \
+        CUTILS_DARRAY_MEMCPY(newitems, (da).items, (da).count * sizeof( *((da).items)) ); \
+        CUTILS_DARRAY_DEALLOCATOR( (da).items ); \
+        (da).items = newitems; \
+        (da).capacity = newcap; \
     } \
+    CUTILS_DARRAY_MEMCPY((da).items + (da).count, _append_buf_, _arr_count * sizeof(T)); \
+    (da).count += _arr_count; \
 }
 
 // da1: 1, 2, 3
@@ -109,6 +118,13 @@ Default darray struct:
 
 #define da_foreach(T, it, da) for (T* (it) = (da).items; (it) < (da).items + (da).count; (it)++)
 
+#define da_copy(da_to, da_from) { \
+    da_free( (da_to) ); \
+    (da_to).items = CUTILS_DARRAY_ALLOCATOR( (da_from).count * sizeof( *((da_from).items) ) ); \
+    (da_to).capacity = (da_from).count; \
+    CUTILS_DARRAY_MEMCPY((da_to).items, (da_from).items, (da_from).count * sizeof( *((da_from).items) ) ); \
+    (da_to).count = (da_from).count; \
+}
 
 
 #endif // CUTILS_DARRAY

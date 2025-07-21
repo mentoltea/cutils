@@ -50,7 +50,10 @@ int main() {
 Appends one element to array.
 
 - `da_appends(da, type, ...)`  
-Appends many elements to array. Is implemented through making a buffer of given elements and iteratively adding them with `da_append`, so *can be used only with constant initialization*.
+Appends many elements to array. Is implemented through making a buffer of given elements and copying it with `memcpy`, so *can be used only with constant initialization*.
+
+- `da_copy(da_to, da_from)`  
+Copies one dynamic array into another.
 
 - `da_concat(da1, da2)`  
 Concatinates two arrays into one and saves to the first array.  
