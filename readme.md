@@ -5,3 +5,6 @@ Libraries in this project are meant to be header-only.
 
 ## Tools:
 - [darray](darray/) - dynamic arrays
+- [list](list/) - linked lists
+- [stringutils](stringutils/) - tools for strings (not finished)
+- [defer](defer/) - function defers

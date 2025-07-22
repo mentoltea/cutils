@@ -91,7 +91,7 @@ List {
     } \
 }
 
-#define ll_copy(NodeType, ll_to, ll_from) { \
+#define ll_copy(ll_to, ll_from, NodeType) { \
     ll_free( (ll_to) ); \
     ll_foreach( NodeType, _copy_ptr, (ll_from) ) { \
         ll_append_back( (ll_to), NodeType, _copy_ptr->item); \
@@ -109,13 +109,13 @@ List {
 
 #define ll_concat(ListType, NodeType, ll1, ll2) { \
     ListType _ll2_copy = {0}; \
-    ll_copy(NodeType, _ll2_copy, (ll2)); \
+    ll_copy(_ll2_copy, (ll2), NodeType); \
     ll_concat_raw((ll1), _ll2_copy); \
 }
 
-#define ll_foreach(T, it, ll) for (T* it = (ll).first; it != NULL; it = it->next)
+#define ll_foreach(NodeType, it, ll) for (NodeType* it = (ll).first; it != NULL; it = it->next)
 
-#define ll_reverse(NodeType, ll) { \
+#define ll_reverse(ll, NodeType) { \
     void* _reverse_temp; \
     for (NodeType* _reverse_ptr = (ll).first; _reverse_ptr != NULL; ) { \
         _reverse_temp = (void*) _reverse_ptr->next; \
@@ -128,7 +128,7 @@ List {
     (ll).last = _reverse_temp; \
 }
 
-#define ll_pop(NodeType, ll, index) { \
+#define ll_pop(ll, NodeType, index) { \
     NodeType* _pop_ptr; \
     if ((index) < (ll).count/2) { \
         _pop_ptr = (ll).first; \
@@ -152,6 +152,7 @@ List {
     if (_pop_ptr == (ll).last) \
         (ll).last = _pop_ptr->next ? _pop_ptr->next : _pop_ptr->prev; \
     ll_node_free(_pop_ptr); \
+    (ll).count--; \
 }
 
 #endif // CUTILS_LIST

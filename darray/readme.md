@@ -97,4 +97,4 @@ Default capacity factor of expanding arrays. By default - 2.
 To build & run tests enter `make` in command line.
 
 ## Authors
-*Agoev T* - [github](https://github.com/mentoltea) | [telegram](https://web.telegram.org/k/#@lacus_lacrimalis) : @lacus_lacrimalis
+*Agoev T* - [github](https://github.com/mentoltea) | [telegram](https://t.me/lacus_lacrimalis) : @lacus_lacrimalis
