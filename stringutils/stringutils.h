@@ -19,24 +19,27 @@
 #endif // CUTILS_STRINGUTILS_MEMCPY
 
 // formats string & writes to temporary buffer 
-char *temp_sprintf(const char* format, ...);
+char *temp_sprintf(char* format, ...);
 
-char *make_terminated(const char* string, size_t length);
+char *make_terminated(char* string, size_t length);
+
+#include "utils/stringBuilder.h"
 
 #endif // CUTILS_STRINGUTILS
 
 /* --------------------------------------------------------- */
 
-#ifdef CUTILS_STRINGUTILS_IMPL
+#if defined(CUTILS_STRINGUTILS_IMPL) && !defined(CUTILS_STRINGUTILS_IMPL_INCLUDED) && !defined(CUTILS_STRINGUTILS_SKIP_IMPL)
+#define CUTILS_STRINGUTILS_IMPL_INCLUDED
 
-char *make_terminated(const char* string, size_t length) {
+char *make_terminated(char* string, size_t length) {
     char *buffer = CUTILS_STRINGUTILS_ALLOCATOR( (length + 1) * sizeof(char));
     CUTILS_STRINGUTILS_MEMCPY(buffer, string, length * sizeof(char));
     buffer[length] = '\0';
     return buffer;
 }
 
-char* temp_sprintf(const char* format, ...) {
+char* temp_sprintf(char* format, ...) {
     va_list arglist;
     va_start(arglist, format);
     
@@ -49,5 +52,7 @@ char* temp_sprintf(const char* format, ...) {
 
     return buffer;
 }
+
+#include "utils/stringBuilder.c"
 
 #endif // CUTILS_STRINGUTILS_IMPL
