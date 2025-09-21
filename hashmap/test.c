@@ -15,16 +15,6 @@ size_t hashfunc(char ** strptr) {
     return hash;
 }
 
-bool keyequal(char** s1, char** s2) {
-    bool result = !strcmp(*s1, *s2);
-    return result;
-}
-
-char* keycopy(char** s) {
-    char *result = strdup(*s);
-    return result;
-}
-
 char* random_string(size_t len) {
     char *buffer = malloc(len+1);
     for (size_t i=0; i<len; i++) {
@@ -43,8 +33,8 @@ int main() {
     HashMap hm = {0};
 
     hm_init(&hm, hashfunc);
-    hm.keyequal = &keyequal;
-    hm.keycopy = &keycopy;
+    hm.keyequal = &hm_string_equal;
+    hm.keycopy = &hm_string_copy;
 
     for (int i=0; i<300; i++) {
         size_t rand_len = rand() % 15;
@@ -58,7 +48,11 @@ int main() {
 
     hm_foreach_start(pair, hm) {
         printf("%s : %d\n", pair->key, pair->value);
+        free(pair->key);
     } hm_foreach_end
 
+    hm_free(&hm);
+
+    printf("OK\n");
     return 0;
 }

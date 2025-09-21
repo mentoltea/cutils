@@ -22,8 +22,13 @@
 #include <stdbool.h>
 #include "../darray/darray.h"
 
+#ifndef HM_KEY
 #define HM_KEY char*
+#endif
+
+#ifndef HM_VALUE
 #define HM_VALUE int
+#endif
 
 typedef struct {
     HM_KEY key;
@@ -89,9 +94,24 @@ void hm_realloc(HashMap *hm);
 #define hm_foreach_end }}
 
 
+
+bool hm_string_equal(char** s1, char** s2);
+char* hm_string_copy(char** s);
+
+
 #endif // CUTILS_HASHMAP
 
 #ifdef CUTILS_HASHMAP_IMPL
+
+bool hm_string_equal(char** s1, char** s2) {
+    bool result = !strcmp(*s1, *s2);
+    return result;
+}
+char* hm_string_copy(char** s) {
+    char *result = strdup(*s);
+    return result;
+}
+
 
 #define START_CAP 128
 
