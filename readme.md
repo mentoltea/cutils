@@ -6,6 +6,6 @@ Libraries in this project are meant to be header-only.
 ## Tools:
 - [darray](darray/) - dynamic arrays
 - [list](list/) - linked lists
-- [hashmap](hashmap/) - hash maps [BETA]
+- [hashmap](hashmap/) - hash maps
 - [stringutils](stringutils/) - tools for strings
 - [defer](defer/) - function defers
