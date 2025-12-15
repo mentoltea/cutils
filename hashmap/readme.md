@@ -11,6 +11,8 @@
 
 `HM_KEY` & `HM_VALUE` macros. If not defined, uses `charptr` (`char*`) and `int` correspondingly.
 
+Custom memory managers available through macros `CUTILS_HASHMAP_ALLOCATOR`, `CUTILS_HASHMAP_CALLOCATOR`, `CUTILS_HASHMAP_DEALLOCATOR` (that are similar to `malloc`, `calloc` and `free` correspondingly)
+
 **Important:** `HM_KEY` & `HM_VALUE` must be simple identificators (for example, `int` or `MyStruct`). If your type does not meet this criteria (pointers, structs, enums), use `typedef` to define them as simple identificators. Example with `char*` [here](./test.c).
 
 ### Required
@@ -35,6 +37,7 @@ Note: all functions listed below are actually macros to provide simple templates
 
 ### Element manipulations
 * `void hm_push(HM_KEY, HM_VALUE)(HashMap(HM_KEY, HM_VALUE) *hm, HM_KEY key, HM_VALUE value)` - aborts if element with such key already exists
+* `void hm_set_or_push(HM_KEY, HM_VALUE)(HashMap(HM_KEY, HM_VALUE) *hm, HM_KEY key, HM_VALUE value)`
 * `bool hm_remove(HM_KEY, HM_VALUE)(HashMap(HM_KEY, HM_VALUE) *hm, HM_KEY key)`
 * `HM_VALUE* hm_at(HM_KEY, HM_VALUE)(HashMap(HM_KEY, HM_VALUE) *hm, HM_KEY key)` - returns `NULL` if no element with such key found
 

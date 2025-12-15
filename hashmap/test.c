@@ -104,7 +104,12 @@ int main() {
     
         for (int i=0; i<300; i++) {
             int rand_val = rand() % 5000;
-            hm_push(int, size_t)(&hm, i, (size_t) rand_val);
+            hm_set_or_push(int, size_t)(&hm, i, (size_t) rand_val);
+        }
+
+        for (int i=0; i<300; i++) {
+            int rand_val = i;
+            hm_set_or_push(int, size_t)(&hm, i, (size_t) rand_val);
         }
         
         printf("Hashmap has %ld elements\n", hm.size);

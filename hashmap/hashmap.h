@@ -96,6 +96,7 @@ typedef struct {
 
 #define hm_init(KEY, VALUE)     TEMPLATE(inner_hm_init, KEY, VALUE)
 #define hm_push(KEY, VALUE)     TEMPLATE(inner_hm_push, KEY, VALUE)
+#define hm_set_or_push(KEY, VALUE)     TEMPLATE(inner_hm_set_or_push, KEY, VALUE)
 #define hm_at(KEY, VALUE)       TEMPLATE(inner_hm_at,   KEY, VALUE)
 #define hm_remove(KEY, VALUE)   TEMPLATE(inner_hm_remove, KEY, VALUE)
 #define hm_free(KEY, VALUE)     TEMPLATE(inner_hm_free, KEY, VALUE)
@@ -105,16 +106,17 @@ typedef struct {
 #define hm_realloc(KEY, VALUE)     TEMPLATE(inner_hm_realloc, KEY, VALUE)
 
 
-void TEMPLATE(inner_hm_init, HM_KEY, HM_VALUE)(TEMPLATE(HashMap, HM_KEY, HM_VALUE) *hm, TEMPLATE(hashfunc_t, HM_KEY) hashfunc);
-void TEMPLATE(inner_hm_push, HM_KEY, HM_VALUE)(TEMPLATE(HashMap, HM_KEY, HM_VALUE) *hm, HM_KEY key, HM_VALUE value);
-HM_VALUE* TEMPLATE(inner_hm_at, HM_KEY, HM_VALUE)(TEMPLATE(HashMap, HM_KEY, HM_VALUE) *hm, HM_KEY key);
-bool TEMPLATE(inner_hm_remove, HM_KEY, HM_VALUE)(TEMPLATE(HashMap, HM_KEY, HM_VALUE) *hm, HM_KEY key);
-void TEMPLATE(inner_hm_free, HM_KEY, HM_VALUE)(TEMPLATE(HashMap, HM_KEY, HM_VALUE) *hm);
-void TEMPLATE(inner_hm_copy, HM_KEY, HM_VALUE)(TEMPLATE(HashMap, HM_KEY, HM_VALUE) *dest, TEMPLATE(HashMap, HM_KEY, HM_VALUE) *src);
+void hm_init(HM_KEY, HM_VALUE)(TEMPLATE(HashMap, HM_KEY, HM_VALUE) *hm, TEMPLATE(hashfunc_t, HM_KEY) hashfunc);
+void hm_push(HM_KEY, HM_VALUE)(TEMPLATE(HashMap, HM_KEY, HM_VALUE) *hm, HM_KEY key, HM_VALUE value);
+void hm_set_or_push(HM_KEY, HM_VALUE)(TEMPLATE(HashMap, HM_KEY, HM_VALUE) *hm, HM_KEY key, HM_VALUE value);
+HM_VALUE* hm_at(HM_KEY, HM_VALUE)(TEMPLATE(HashMap, HM_KEY, HM_VALUE) *hm, HM_KEY key);
+bool hm_remove(HM_KEY, HM_VALUE)(TEMPLATE(HashMap, HM_KEY, HM_VALUE) *hm, HM_KEY key);
+void hm_free(HM_KEY, HM_VALUE)(TEMPLATE(HashMap, HM_KEY, HM_VALUE) *hm);
+void hm_copy(HM_KEY, HM_VALUE)(TEMPLATE(HashMap, HM_KEY, HM_VALUE) *dest, TEMPLATE(HashMap, HM_KEY, HM_VALUE) *src);
 
-void TEMPLATE(inner_hm_update_statistics, HM_KEY, HM_VALUE)(TEMPLATE(HashMap, HM_KEY, HM_VALUE) *hm);
-void TEMPLATE(inner_hm_realloc_if_needed, HM_KEY, HM_VALUE)(TEMPLATE(HashMap, HM_KEY, HM_VALUE) *hm);
-void TEMPLATE(inner_hm_realloc, HM_KEY, HM_VALUE)(TEMPLATE(HashMap, HM_KEY, HM_VALUE) *hm);
+void hm_update_statistics(HM_KEY, HM_VALUE)(TEMPLATE(HashMap, HM_KEY, HM_VALUE) *hm);
+void hm_realloc_if_needed(HM_KEY, HM_VALUE)(TEMPLATE(HashMap, HM_KEY, HM_VALUE) *hm);
+void hm_realloc(HM_KEY, HM_VALUE)(TEMPLATE(HashMap, HM_KEY, HM_VALUE) *hm);
 
 #define hm_foreach_start(KEY, VALUE, it, hm) \
     for (size_t __index=0; __index<(hm).count; __index++) { \
@@ -157,7 +159,7 @@ char* hm_string_copy( char** s) {
 void hm_init(HM_KEY, HM_VALUE)(TEMPLATE(HashMap, HM_KEY, HM_VALUE) *hm, TEMPLATE(hashfunc_t, HM_KEY) hashfunc) {
     hm->hashfunc = hashfunc;
     
-    hm->items = calloc(START_CAP, sizeof(TEMPLATE(hm_da, HM_KEY, HM_VALUE)));
+    hm->items = CUTILS_HASHMAP_CALLOCATOR(START_CAP, sizeof(TEMPLATE(hm_da, HM_KEY, HM_VALUE)));
     hm->count = START_CAP;
 
     hm->max_count_per_node = 0;
@@ -188,6 +190,43 @@ void hm_push(HM_KEY, HM_VALUE)(TEMPLATE(HashMap, HM_KEY, HM_VALUE) *hm, HM_KEY k
                 // return;
                 fprintf(stderr, "Pushed key already exists\n");
                 abort();
+            }
+        }
+    }
+
+    da_append(*da, pair);
+    
+    hm->size++;
+    if (da->count > hm->max_count_per_node)
+        hm->max_count_per_node = da->count;
+    if (da->count == 1) 
+        hm->count_non_empty_nodes++; 
+}
+
+void hm_set_or_push(HM_KEY, HM_VALUE)(TEMPLATE(HashMap, HM_KEY, HM_VALUE) *hm, HM_KEY key, HM_VALUE value) {
+    hm_realloc_if_needed(HM_KEY, HM_VALUE)(hm);
+    size_t hash = hm->hashfunc(&key);
+    size_t index = hash % hm->count;
+
+    TEMPLATE(hm_da, HM_KEY, HM_VALUE)* da = &hm->items[index];
+    TEMPLATE(hm_pair, HM_KEY, HM_VALUE) pair = {.key = key, .value = value};
+    
+    if (hm->keyequal) {
+        da_foreach(TEMPLATE(hm_pair, HM_KEY, HM_VALUE), ptr, *da) {
+            if (hm->keyequal(&ptr->key, &key)) {
+                ptr->value = value;
+                return;
+                // fprintf(stderr, "Pushed key already exists\n");
+                // abort();
+            }
+        }
+    } else {
+        da_foreach(TEMPLATE(hm_pair, HM_KEY, HM_VALUE), ptr, *da) {
+            if (ptr->key == key) {
+                ptr->value = value;
+                return;
+                // fprintf(stderr, "Pushed key already exists\n");
+                // abort();
             }
         }
     }
@@ -264,7 +303,7 @@ void hm_free(HM_KEY, HM_VALUE)(TEMPLATE(HashMap, HM_KEY, HM_VALUE) *hm) {
         da_free(*da);
     }
     if (hm->items) {
-        free(hm->items);
+        CUTILS_HASHMAP_DEALLOCATOR(hm->items);
     }
     hm->items = NULL;
     hm->count = 0;
@@ -278,7 +317,7 @@ void hm_copy(HM_KEY, HM_VALUE)(TEMPLATE(HashMap, HM_KEY, HM_VALUE) *dest, TEMPLA
     dest->keycopy = src->keycopy;
     dest->valuecopy = src->valuecopy;
     
-    dest->items = calloc(src->count, sizeof(TEMPLATE(hm_da, HM_KEY, HM_VALUE)));
+    dest->items = CUTILS_HASHMAP_CALLOCATOR(src->count, sizeof(TEMPLATE(hm_da, HM_KEY, HM_VALUE)));
     dest->count = src->count;
     
     for (size_t index=0; index<src->count; index++) {
@@ -291,7 +330,7 @@ void hm_copy(HM_KEY, HM_VALUE)(TEMPLATE(HashMap, HM_KEY, HM_VALUE) *dest, TEMPLA
             dest_da->items = NULL;
             continue;
         }
-        dest_da->items = malloc(dest_da->capacity * sizeof(TEMPLATE(hm_pair, HM_KEY, HM_VALUE)));
+        dest_da->items = CUTILS_HASHMAP_ALLOCATOR(dest_da->capacity * sizeof(TEMPLATE(hm_pair, HM_KEY, HM_VALUE)));
         
         for (size_t i=0; i<src_da->count; i++) {
             TEMPLATE(hm_pair, HM_KEY, HM_VALUE) *dp = &dest_da->items[i];
@@ -335,7 +374,7 @@ void hm_realloc(HM_KEY, HM_VALUE)(TEMPLATE(HashMap, HM_KEY, HM_VALUE) *hm) {
     if (hm->count == 0) return;
 
     size_t new_count = hm->count*CAP_FACTOR;
-    TEMPLATE(hm_da, HM_KEY, HM_VALUE) *new_items = calloc(new_count, sizeof(TEMPLATE(hm_da, HM_KEY, HM_VALUE)));
+    TEMPLATE(hm_da, HM_KEY, HM_VALUE) *new_items = CUTILS_HASHMAP_CALLOCATOR(new_count, sizeof(TEMPLATE(hm_da, HM_KEY, HM_VALUE)));
 
     for (size_t index=0; index<hm->count; index++) {
         TEMPLATE(hm_da, HM_KEY, HM_VALUE) *da = &hm->items[index];
@@ -354,7 +393,7 @@ void hm_realloc(HM_KEY, HM_VALUE)(TEMPLATE(HashMap, HM_KEY, HM_VALUE) *hm) {
         TEMPLATE(hm_da, HM_KEY, HM_VALUE) *da = &hm->items[index];
         da_free(*da);
     }
-    free(hm->items);
+    CUTILS_HASHMAP_DEALLOCATOR(hm->items);
     
     hm->items = new_items;
     hm->count = new_count;
